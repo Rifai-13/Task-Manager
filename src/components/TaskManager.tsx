@@ -1,14 +1,19 @@
-// src/components/TaskManager.tsx
-
 import { useState, useMemo, useEffect } from "react";
-import { Calendar, Clock, Plus, Trash2, LoaderCircle } from "lucide-react";
-import { supabase } from "../lib/supabase"; // 1. Import Supabase client
-import type { Database } from "../lib/database.types"; // Import tipe Database
+import {
+  Calendar,
+  Clock,
+  Plus,
+  Trash2,
+  LoaderCircle,
+  Edit,
+} from "lucide-react";
 
-// 2. Definisikan tipe Task berdasarkan skema DB dari supabase.ts
+import { supabase } from "../lib/supabase";
+import type { Database } from "../lib/database.types";
+import EditTask from "./EditTask";
+
 type Task = Database["public"]["Tables"]["tasks"]["Row"];
 
-// Fungsi bantuan untuk memformat sisa waktu
 const formatRemainingTime = (deadline: string | null): string => {
   if (!deadline) return "";
   const now = new Date();
@@ -26,9 +31,10 @@ export default function TaskManager() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newDeadline, setNewDeadline] = useState("");
-  const [loading, setLoading] = useState(true); // State untuk loading
+  const [loading, setLoading] = useState(true);
 
-  // 3. Gunakan useEffect untuk mengambil data saat komponen dimuat
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+
   useEffect(() => {
     const fetchTasks = async () => {
       setLoading(true);
@@ -55,7 +61,6 @@ export default function TaskManager() {
     return { total, completed, remaining };
   }, [tasks]);
 
-  // 4. Ubah fungsi handleAddTask untuk mengirim data ke Supabase
   const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTaskTitle.trim()) return;
@@ -72,13 +77,12 @@ export default function TaskManager() {
     if (error) {
       console.error("Error adding task:", error);
     } else {
-      setTasks([data, ...tasks]); // Tambahkan ke state UI
+      setTasks([data, ...tasks]);
       setNewTaskTitle("");
       setNewDeadline("");
     }
   };
 
-  // 5. Ubah fungsi handleToggleComplete untuk update data
   const handleToggleComplete = async (task: Task) => {
     const { error } = await supabase
       .from("tasks")
@@ -96,7 +100,6 @@ export default function TaskManager() {
     }
   };
 
-  // 6. Ubah fungsi handleDeleteTask untuk menghapus data
   const handleDeleteTask = async (taskId: number) => {
     const { error } = await supabase.from("tasks").delete().eq("id", taskId);
 
@@ -104,6 +107,27 @@ export default function TaskManager() {
       console.error("Error deleting task:", error);
     } else {
       setTasks(tasks.filter((task) => task.id !== taskId));
+    }
+  };
+
+  const handleUpdateTask = async (updates: { title: string; deadline: string | null }) => {
+    if (!editingTask || !updates.title.trim()) return;
+
+    const { data, error } = await supabase
+      .from('tasks')
+      .update({ 
+        title: updates.title, 
+        deadline: updates.deadline 
+      })
+      .eq('id', editingTask.id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating task:', error);
+    } else if (data) {
+      setTasks(tasks.map(t => (t.id === editingTask.id ? data : t)));
+      setEditingTask(null);
     }
   };
 
@@ -118,7 +142,6 @@ export default function TaskManager() {
     <div className="bg-slate-100 min-h-screen flex items-center justify-center p-4 font-sans">
       <div className="w-full max-w-3xl bg-white rounded-xl shadow-lg">
         <header className="bg-blue-600 text-white p-6 rounded-t-xl">
-          {/* ... (bagian header tetap sama) ... */}
           <h1 className="text-3xl font-bold">Task Manager</h1>
           <p className="text-blue-200">Kelola tugas Anda dengan mudah</p>
           <div className="flex items-center gap-2 mt-4 text-sm">
@@ -132,7 +155,6 @@ export default function TaskManager() {
             onSubmit={handleAddTask}
             className="flex flex-col sm:flex-row gap-3 mb-4"
           >
-            {/* ... (bagian form tetap sama) ... */}
             <input
               type="text"
               value={newTaskTitle}
@@ -159,13 +181,11 @@ export default function TaskManager() {
           </form>
 
           <div className="text-sm text-gray-500 mb-4 border-b pb-4">
-            {/* ... (bagian statistik tetap sama) ... */}
             Total: <strong>{taskStats.total}</strong> &nbsp; Selesai:{" "}
             <strong>{taskStats.completed}</strong> &nbsp; Tersisa:{" "}
             <strong>{taskStats.remaining}</strong>
           </div>
 
-          {/* Daftar Tugas */}
           <div className="space-y-3 min-h-[100px]">
             {loading ? (
               <div className="flex justify-center items-center pt-10">
@@ -216,6 +236,12 @@ export default function TaskManager() {
                     </div>
                   </div>
                   <button
+                    onClick={() => setEditingTask(task)}
+                    className="text-gray-400 hover:text-blue-500 p-1"
+                  >
+                    <Edit size={18} />
+                  </button>
+                  <button
                     onClick={() => handleDeleteTask(task.id)}
                     className="text-gray-400 hover:text-red-500"
                   >
@@ -228,9 +254,15 @@ export default function TaskManager() {
         </main>
 
         <footer className="text-center text-xs text-gray-400 py-4">
-          Data tersimpan di cloud dan dapat diakses dari perangkat manapun
+          &copy; {new Date().getFullYear()} Muhammad Rifai
         </footer>
       </div>
+      <EditTask
+        isOpen={editingTask !== null}
+        onClose={() => setEditingTask(null)}
+        task={editingTask}
+        onSave={handleUpdateTask}
+      />
     </div>
   );
 }
