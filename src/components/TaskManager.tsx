@@ -1,12 +1,12 @@
 // src/components/TaskManager.tsx
 
-import { useState, useMemo, useEffect } from 'react';
-import { Calendar, Clock, Plus, Trash2, LoaderCircle } from 'lucide-react';
-import { supabase } from '../lib/supabase'; // 1. Import Supabase client
-import type { Database } from '../lib/supabase'; // Import tipe Database
+import { useState, useMemo, useEffect } from "react";
+import { Calendar, Clock, Plus, Trash2, LoaderCircle } from "lucide-react";
+import { supabase } from "../lib/supabase"; // 1. Import Supabase client
+import type { Database } from "../lib/database.types"; // Import tipe Database
 
 // 2. Definisikan tipe Task berdasarkan skema DB dari supabase.ts
-type Task = Database['public']['Tables']['tasks']['Row'];
+type Task = Database["public"]["Tables"]["tasks"]["Row"];
 
 // Fungsi bantuan untuk memformat sisa waktu
 const formatRemainingTime = (deadline: string | null): string => {
@@ -24,8 +24,8 @@ const formatRemainingTime = (deadline: string | null): string => {
 
 export default function TaskManager() {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [newTaskTitle, setNewTaskTitle] = useState('');
-  const [newDeadline, setNewDeadline] = useState('');
+  const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [newDeadline, setNewDeadline] = useState("");
   const [loading, setLoading] = useState(true); // State untuk loading
 
   // 3. Gunakan useEffect untuk mengambil data saat komponen dimuat
@@ -33,12 +33,12 @@ export default function TaskManager() {
     const fetchTasks = async () => {
       setLoading(true);
       const { data, error } = await supabase
-        .from('tasks')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .from("tasks")
+        .select("*")
+        .order("created_at", { ascending: false });
 
       if (error) {
-        console.error('Error fetching tasks:', error);
+        console.error("Error fetching tasks:", error);
       } else {
         setTasks(data);
       }
@@ -50,7 +50,7 @@ export default function TaskManager() {
 
   const taskStats = useMemo(() => {
     const total = tasks.length;
-    const completed = tasks.filter(task => task.completed).length;
+    const completed = tasks.filter((task) => task.completed).length;
     const remaining = total - completed;
     return { total, completed, remaining };
   }, [tasks]);
@@ -61,60 +61,57 @@ export default function TaskManager() {
     if (!newTaskTitle.trim()) return;
 
     const { data, error } = await supabase
-      .from('tasks')
-      .insert({ 
-        title: newTaskTitle, 
-        deadline: newDeadline || null 
+      .from("tasks")
+      .insert({
+        title: newTaskTitle,
+        deadline: newDeadline || null,
       })
       .select()
       .single();
 
     if (error) {
-      console.error('Error adding task:', error);
+      console.error("Error adding task:", error);
     } else {
       setTasks([data, ...tasks]); // Tambahkan ke state UI
-      setNewTaskTitle('');
-      setNewDeadline('');
+      setNewTaskTitle("");
+      setNewDeadline("");
     }
   };
 
   // 5. Ubah fungsi handleToggleComplete untuk update data
   const handleToggleComplete = async (task: Task) => {
     const { error } = await supabase
-      .from('tasks')
+      .from("tasks")
       .update({ completed: !task.completed })
-      .eq('id', task.id);
-    
-    if (error) {
-        console.error('Error updating task:', error);
-    } else {
-        setTasks(
-            tasks.map(t =>
-              t.id === task.id ? { ...t, completed: !t.completed } : t
-            )
-        );
-    }
-  };
-  
-  // 6. Ubah fungsi handleDeleteTask untuk menghapus data
-  const handleDeleteTask = async (taskId: string) => {
-    const { error } = await supabase
-      .from('tasks')
-      .delete()
-      .eq('id', taskId);
+      .eq("id", task.id);
 
     if (error) {
-        console.error('Error deleting task:', error);
+      console.error("Error updating task:", error);
     } else {
-        setTasks(tasks.filter(task => task.id !== taskId));
+      setTasks(
+        tasks.map((t) =>
+          t.id === task.id ? { ...t, completed: !t.completed } : t
+        )
+      );
     }
   };
-  
-  const today = new Date().toLocaleDateString('id-ID', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
+
+  // 6. Ubah fungsi handleDeleteTask untuk menghapus data
+  const handleDeleteTask = async (taskId: number) => {
+    const { error } = await supabase.from("tasks").delete().eq("id", taskId);
+
+    if (error) {
+      console.error("Error deleting task:", error);
+    } else {
+      setTasks(tasks.filter((task) => task.id !== taskId));
+    }
+  };
+
+  const today = new Date().toLocaleDateString("id-ID", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
 
   return (
@@ -131,51 +128,105 @@ export default function TaskManager() {
         </header>
 
         <main className="p-6">
-          <form onSubmit={handleAddTask} className="flex flex-col sm:flex-row gap-3 mb-4">
-             {/* ... (bagian form tetap sama) ... */}
-             <input type="text" value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)} placeholder="Tambahkan tugas baru..." className="flex-grow border rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"/>
-             <div className="relative flex items-center"><Clock size={16} className="absolute left-3 text-gray-400" /><input type="datetime-local" value={newDeadline} onChange={(e) => setNewDeadline(e.target.value)} className="w-full border rounded-md p-2 pl-9 text-sm text-gray-500 focus:ring-2 focus:ring-blue-500 outline-none"/></div>
-             <button type="submit" className="bg-blue-600 text-white rounded-md px-4 py-2 flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors"><Plus size={16} /><span>Tambah</span></button>
+          <form
+            onSubmit={handleAddTask}
+            className="flex flex-col sm:flex-row gap-3 mb-4"
+          >
+            {/* ... (bagian form tetap sama) ... */}
+            <input
+              type="text"
+              value={newTaskTitle}
+              onChange={(e) => setNewTaskTitle(e.target.value)}
+              placeholder="Tambahkan tugas baru..."
+              className="flex-grow border rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+            <div className="relative flex items-center">
+              <Clock size={16} className="absolute left-3 text-gray-400" />
+              <input
+                type="datetime-local"
+                value={newDeadline}
+                onChange={(e) => setNewDeadline(e.target.value)}
+                className="w-full border rounded-md p-2 pl-9 text-sm text-gray-500 focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+            </div>
+            <button
+              type="submit"
+              className="bg-blue-600 text-white rounded-md px-4 py-2 flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors"
+            >
+              <Plus size={16} />
+              <span>Tambah</span>
+            </button>
           </form>
-          
+
           <div className="text-sm text-gray-500 mb-4 border-b pb-4">
-             {/* ... (bagian statistik tetap sama) ... */}
-             Total: <strong>{taskStats.total}</strong> &nbsp; Selesai: <strong>{taskStats.completed}</strong> &nbsp; Tersisa: <strong>{taskStats.remaining}</strong>
+            {/* ... (bagian statistik tetap sama) ... */}
+            Total: <strong>{taskStats.total}</strong> &nbsp; Selesai:{" "}
+            <strong>{taskStats.completed}</strong> &nbsp; Tersisa:{" "}
+            <strong>{taskStats.remaining}</strong>
           </div>
 
           {/* Daftar Tugas */}
           <div className="space-y-3 min-h-[100px]">
             {loading ? (
-                <div className="flex justify-center items-center pt-10">
-                    <LoaderCircle className="animate-spin text-blue-500" />
-                </div>
+              <div className="flex justify-center items-center pt-10">
+                <LoaderCircle className="animate-spin text-blue-500" />
+              </div>
             ) : (
-                tasks.map(task => (
-                  <div key={task.id} className={`border rounded-lg p-4 flex items-center gap-4 transition-opacity ${task.completed ? 'opacity-50' : ''}`}>
-                    <button onClick={() => handleToggleComplete(task)} className={`w-6 h-6 border-2 rounded-full flex-shrink-0 ${task.completed ? 'bg-blue-500 border-blue-500' : 'border-gray-300'}`}></button>
-                    <div className="flex-grow">
-                      <p className={`font-semibold ${task.completed ? 'line-through' : ''}`}>{task.title}</p>
-                      <div className="text-xs text-gray-500 flex items-center gap-3 flex-wrap mt-1">
-                        <span>Dibuat: {new Date(task.created_at).toLocaleString('id-ID')}</span>
-                        {task.deadline && (
-                           <>
-                            <span>•</span>
-                            <span className='flex items-center gap-1'><Calendar size={12} /> {new Date(task.deadline).toLocaleString('id-ID')}</span>
-                            <span>•</span>
-                            <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">{formatRemainingTime(task.deadline)}</span>
-                           </>
-                        )}
-                      </div>
+              tasks.map((task) => (
+                <div
+                  key={task.id}
+                  className={`border rounded-lg p-4 flex items-center gap-4 transition-opacity ${
+                    task.completed ? "opacity-50" : ""
+                  }`}
+                >
+                  <button
+                    onClick={() => handleToggleComplete(task)}
+                    className={`w-6 h-6 border-2 rounded-full flex-shrink-0 ${
+                      task.completed
+                        ? "bg-blue-500 border-blue-500"
+                        : "border-gray-300"
+                    }`}
+                  ></button>
+                  <div className="flex-grow">
+                    <p
+                      className={`font-semibold ${
+                        task.completed ? "line-through" : ""
+                      }`}
+                    >
+                      {task.title}
+                    </p>
+                    <div className="text-xs text-gray-500 flex items-center gap-3 flex-wrap mt-1">
+                      <span>
+                        Dibuat:{" "}
+                        {new Date(task.created_at).toLocaleString("id-ID")}
+                      </span>
+                      {task.deadline && (
+                        <>
+                          <span>•</span>
+                          <span className="flex items-center gap-1">
+                            <Calendar size={12} />{" "}
+                            {new Date(task.deadline).toLocaleString("id-ID")}
+                          </span>
+                          <span>•</span>
+                          <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                            {formatRemainingTime(task.deadline)}
+                          </span>
+                        </>
+                      )}
                     </div>
-                    <button onClick={() => handleDeleteTask(task.id)} className="text-gray-400 hover:text-red-500">
-                      <Trash2 size={18} />
-                    </button>
                   </div>
-                ))
+                  <button
+                    onClick={() => handleDeleteTask(task.id)}
+                    className="text-gray-400 hover:text-red-500"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              ))
             )}
           </div>
         </main>
-        
+
         <footer className="text-center text-xs text-gray-400 py-4">
           Data tersimpan di cloud dan dapat diakses dari perangkat manapun
         </footer>
