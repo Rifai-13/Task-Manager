@@ -1,38 +1,19 @@
+// src/TaskManager.tsx
 import { useState, useMemo, useEffect } from "react";
-import {
-  Calendar,
-  Clock,
-  Plus,
-  Trash2,
-  LoaderCircle,
-  Edit,
-} from "lucide-react";
+import { Calendar, Clock, Plus } from "lucide-react";
 
-import { supabase } from "../lib/supabase";
-import type { Database } from "../lib/database.types";
-import EditTask from "./EditTask";
+import { supabase } from "./lib/supabase";
+import type { Database } from "./lib/database.types";
+import EditTask from "./components/EditTask";
+import TaskList from "./components/TaskList";
 
 type Task = Database["public"]["Tables"]["tasks"]["Row"];
-
-const formatRemainingTime = (deadline: string | null): string => {
-  if (!deadline) return "";
-  const now = new Date();
-  const deadlineDate = new Date(deadline);
-  const diffInMs = deadlineDate.getTime() - now.getTime();
-  const diffInDays = Math.ceil(diffInMs / (1000 * 60 * 60 * 24));
-
-  if (diffInDays < 0) return "Tenggat waktu terlewat";
-  if (diffInDays === 0) return "Hari ini";
-  if (diffInDays === 1) return "1 hari lagi";
-  return `${diffInDays} hari lagi`;
-};
 
 export default function TaskManager() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newDeadline, setNewDeadline] = useState("");
   const [loading, setLoading] = useState(true);
-
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   useEffect(() => {
@@ -186,71 +167,14 @@ export default function TaskManager() {
             <strong>{taskStats.remaining}</strong>
           </div>
 
-          <div className="space-y-3 min-h-[100px]">
-            {loading ? (
-              <div className="flex justify-center items-center pt-10">
-                <LoaderCircle className="animate-spin text-blue-500" />
-              </div>
-            ) : (
-              tasks.map((task) => (
-                <div
-                  key={task.id}
-                  className={`border rounded-lg p-4 flex items-center gap-4 transition-opacity ${
-                    task.completed ? "opacity-50" : ""
-                  }`}
-                >
-                  <button
-                    onClick={() => handleToggleComplete(task)}
-                    className={`w-6 h-6 border-2 rounded-full flex-shrink-0 ${
-                      task.completed
-                        ? "bg-blue-500 border-blue-500"
-                        : "border-gray-300"
-                    }`}
-                  ></button>
-                  <div className="flex-grow">
-                    <p
-                      className={`font-semibold ${
-                        task.completed ? "line-through" : ""
-                      }`}
-                    >
-                      {task.title}
-                    </p>
-                    <div className="text-xs text-gray-500 flex items-center gap-3 flex-wrap mt-1">
-                      <span>
-                        Dibuat:{" "}
-                        {new Date(task.created_at).toLocaleString("id-ID")}
-                      </span>
-                      {task.deadline && (
-                        <>
-                          <span>•</span>
-                          <span className="flex items-center gap-1">
-                            <Calendar size={12} />{" "}
-                            {new Date(task.deadline).toLocaleString("id-ID")}
-                          </span>
-                          <span>•</span>
-                          <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-                            {formatRemainingTime(task.deadline)}
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setEditingTask(task)}
-                    className="text-gray-400 hover:text-blue-500 p-1"
-                  >
-                    <Edit size={18} />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteTask(task.id)}
-                    className="text-gray-400 hover:text-red-500"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
+          {/* Gunakan komponen TaskList */}
+          <TaskList
+            tasks={tasks}
+            loading={loading}
+            onToggleComplete={handleToggleComplete}
+            onEdit={setEditingTask}
+            onDelete={handleDeleteTask}
+          />
         </main>
 
         <footer className="text-center text-xs text-gray-400 py-4">
