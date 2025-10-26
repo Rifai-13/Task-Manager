@@ -1,10 +1,12 @@
-
-import TaskManager from './TaskManager'
+import TaskManager from "./TaskManager";
+import { AuthProvider } from "./contexts/AuthContext";
 
 function App() {
   return (
-    <TaskManager />
-  )
+    <AuthProvider>
+      <TaskManager />
+    </AuthProvider>
+  );
 }
 
-export default App
+export default App;

@@ -1,4 +1,3 @@
-// src/components/EditTaskModal.tsx
 
 import { useState, useEffect, Fragment } from "react";
 import {
@@ -7,6 +6,7 @@ import {
   DialogTitle,
   Transition,
 } from "@headlessui/react";
+import { X, Calendar, Save, Clock } from "lucide-react";
 import type { Database } from "../lib/database.types";
 
 type Task = Database["public"]["Tables"]["tasks"]["Row"];
@@ -14,7 +14,6 @@ type Task = Database["public"]["Tables"]["tasks"]["Row"];
 const toDateTimeLocal = (isoDate: string | null) => {
   if (!isoDate) return "";
   const date = new Date(isoDate);
-  // Adjust for timezone offset
   const timezoneOffset = date.getTimezoneOffset() * 60000;
   const localDate = new Date(date.getTime() - timezoneOffset);
   return localDate.toISOString().slice(0, 16);
@@ -36,7 +35,6 @@ export default function EditTask({
   const [editedTitle, setEditedTitle] = useState("");
   const [editedDeadline, setEditedDeadline] = useState("");
 
-  // Sinkronkan state input dengan task yang dipilih saat modal dibuka
   useEffect(() => {
     if (task) {
       setEditedTitle(task.title || "");
@@ -46,12 +44,14 @@ export default function EditTask({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({ title: editedTitle, deadline: editedDeadline || null });
+    if (editedTitle.trim()) {
+      onSave({ title: editedTitle.trim(), deadline: editedDeadline || null });
+    }
   };
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-10" onClose={onClose}>
+      <Dialog as="div" className="relative z-50" onClose={onClose}>
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-300"
@@ -61,7 +61,7 @@ export default function EditTask({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black/25" />
+          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
         </Transition.Child>
         <div className="fixed inset-0 overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4 text-center">
@@ -74,57 +74,81 @@ export default function EditTask({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <DialogPanel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-                <DialogTitle
-                  as="h3"
-                  className="text-lg font-medium leading-6 text-gray-900"
-                >
-                  Edit Tugas
-                </DialogTitle>
-                <form onSubmit={handleSubmit} className="mt-4">
+              <DialogPanel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white shadow-2xl border border-white/20 transition-all">
+                {/* Header */}
+                <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <Calendar size={24} className="mr-3" />
+                      <DialogTitle
+                        as="h3"
+                        className="text-xl font-bold leading-6"
+                      >
+                        Edit Tugas
+                      </DialogTitle>
+                    </div>
+                    <button
+                      onClick={onClose}
+                      className="text-white hover:text-blue-100 transition-colors p-1 rounded-lg hover:bg-white/10"
+                    >
+                      <X size={24} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Form */}
+                <form onSubmit={handleSubmit} className="p-6 space-y-6">
                   <div>
                     <label
                       htmlFor="title"
-                      className="block text-sm font-medium text-gray-700"
+                      className="block text-sm font-semibold text-gray-700 mb-3"
                     >
                       Judul Tugas
                     </label>
-                    <input
+                    <textarea
                       id="title"
-                      type="text"
                       value={editedTitle}
                       onChange={(e) => setEditedTitle(e.target.value)}
-                      className="mt-1 w-full border rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-300 resize-none"
+                      placeholder="Masukkan judul tugas..."
+                      rows={3}
                       autoFocus
                     />
                   </div>
+
                   <div>
                     <label
                       htmlFor="deadline"
-                      className="block text-sm font-medium text-gray-700 mt-4"
+                      className="block text-sm font-semibold text-gray-700 mb-3"
                     >
-                      Tenggal Waktu
+                      <div className="flex items-center">
+                        <Clock size={16} className="mr-2" />
+                        Tanggal & Waktu Deadline
+                      </div>
                     </label>
                     <input
                       id="deadline"
                       type="datetime-local"
                       value={editedDeadline}
                       onChange={(e) => setEditedDeadline(e.target.value)}
-                      className="mt-1 w-full border rounded-md p-2 text-sm text-gray-500 focus:ring-2 focus:ring-blue-500 outline-none"
+                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-700 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-300"
                     />
                   </div>
-                  <div className="mt-4 flex justify-end gap-2">
+
+                  <div className="flex gap-3 pt-4">
                     <button
                       type="button"
                       onClick={onClose}
-                      className="inline-flex justify-center rounded-md border border-transparent bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200"
+                      className="flex-1 border-2 border-gray-300 text-gray-700 py-3 px-4 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-300 font-semibold"
                     >
                       Batal
                     </button>
                     <button
                       type="submit"
-                      className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200"
+                      disabled={!editedTitle.trim()}
+                      className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-xl hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-semibold flex items-center justify-center gap-2"
                     >
+                      <Save size={20} />
                       Simpan Perubahan
                     </button>
                   </div>
