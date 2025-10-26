@@ -181,16 +181,16 @@ export default function TaskManager() {
     <div className="bg-gradient-to-br from-blue-400 via-purple-500 to-pink-400 min-h-screen flex items-start justify-center p-4 font-sans">
       <div className="w-full max-w-4xl bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/60 mt-8 mb-8">
         {/* Header dengan gradient yang sama dengan AuthModal */}
-        <header className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-8 rounded-t-3xl relative">
+        <header className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 md:p-8 rounded-t-3xl relative">
           <div className="absolute inset-0 bg-black/10"></div>
           <div className="relative z-10">
-            <div className="flex justify-between items-start mb-6">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-start mb-6 gap-4 md:gap-0">
               <div>
                 <div className="flex items-center mb-2">
                   <div className="bg-white/20 p-2 rounded-2xl mr-3">
                     <Calendar size={28} className="text-white" />
                   </div>
-                  <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+                  <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
                     TaskFlow
                   </h1>
                 </div>
@@ -218,7 +218,7 @@ export default function TaskManager() {
           </div>
         </header>
 
-        <main className="p-8">
+        <main className="p-4 md:p-8">
           {user ? (
             <>
               {/* Stats Cards */}
@@ -322,9 +322,9 @@ export default function TaskManager() {
             </>
           ) : (
             /* Welcome Section for Non-Authenticated Users */
-            <div className="text-center py-16">
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-3xl p-12 max-w-2xl mx-auto border border-white shadow-2xl">
-                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-white/60">
+            <div className="text-center py-8 md:py-16">
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-3xl p-6 md:p-12 max-w-2xl mx-auto border border-white shadow-2xl">
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-white/60">
                   <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
                     <Calendar size={40} className="text-white" />
                   </div>
